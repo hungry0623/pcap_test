@@ -51,20 +51,22 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
 		return(2);
 	}
-	/* Grab a packet */
-	check = pcap_next_ex(handle, &header, &packet);
-	printf("\n================Packet info================= \n\n");
-	/* Print its ETHER_MAC info*/
-	ether_mac(packet);
-	/* Print its IP_IP info*/
-	ip_ip(packet);
-	/* Print its TCP_PORT info*/
-	tcp_port(packet);
-	/* Print its DATA_OUTPUT info*/
-	data_output(packet);
-	printf("\n");
-	/* And close the session */
-			
+	while(1)
+	{
+		/* Grab a packet */
+		check = pcap_next_ex(handle, &header, &packet);
+		printf("\n================Packet info================= \n\n");
+		/* Print its ETHER_MAC info*/
+		ether_mac(packet);
+		/* Print its IP_IP info*/
+		ip_ip(packet);
+		/* Print its TCP_PORT info*/
+		tcp_port(packet);
+		/* Print its DATA_OUTPUT info*/
+		data_output(packet);
+		printf("\n");
+		/* And close the session */
+	}		
 	pcap_close(handle);			
 	return(0);
 }
@@ -73,7 +75,7 @@ void ether_mac(const u_char *packet)
 {
 	int i = 0;
 
-	printf("eth Src = ");
+	printf("eth Src  = ");
 
 	for(i = MAC_NUM; i < (MAC_NUM*2); i++)
 	{
@@ -89,7 +91,7 @@ void ether_mac(const u_char *packet)
 		}
 	}
 
-	printf("eth Dst = ");
+	printf("eth Dst  = ");
 
 	for(i = 0x0; i < MAC_NUM; i++)
 	{
@@ -113,7 +115,7 @@ void ip_ip(const u_char *packet)
 {
 	int i = 0;
 	
-	printf("ip Src = ");
+	printf("ip Src   = ");
 
 	for(i = IP_NUM; i < IP_NUM+4; i++)
 	{
@@ -129,7 +131,7 @@ void ip_ip(const u_char *packet)
 		}
 	}
 
-	printf("ip Dst = ");
+	printf("ip Dst   = ");
 
 	for(i = IP_NUM+4; i < IP_NUM+8; i++)
 	{
