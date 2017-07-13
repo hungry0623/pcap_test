@@ -3,9 +3,13 @@
 
 #define MAC_NUM 0x6
 #define IP_NUM 0x1a
+#define TCP_NUM 0x22
+#define DATA_BYTES 100
 
 void ether_mac(const u_char *packet);
 void ip_ip(const u_char *packet);
+void tcp_port(const u_char *packet);
+void data_output(const u_char *packet);
 
 int main(int argc, char *argv[])
 {
@@ -49,12 +53,16 @@ int main(int argc, char *argv[])
 	}
 	/* Grab a packet */
 	check = pcap_next_ex(handle, &header, &packet);
-	
-	/* Print its eth_MAC info*/
+	printf("\n================Packet info================= \n\n");
+	/* Print its ETHER_MAC info*/
 	ether_mac(packet);
-	/* Print its eth_MAC info*/
+	/* Print its IP_IP info*/
 	ip_ip(packet);
-
+	/* Print its TCP_PORT info*/
+	tcp_port(packet);
+	/* Print its DATA_OUTPUT info*/
+	data_output(packet);
+	printf("\n");
 	/* And close the session */
 			
 	pcap_close(handle);			
@@ -64,12 +72,29 @@ int main(int argc, char *argv[])
 void ether_mac(const u_char *packet)
 {
 	int i = 0;
-	
+
+	printf("eth Src = ");
+
+	for(i = MAC_NUM; i < (MAC_NUM*2); i++)
+	{
+		printf("%02x",packet[i]);
+
+		if(i != ((MAC_NUM*2)-1))
+		{
+			printf(":");
+		}
+		else
+		{
+			printf("\n");
+		}
+	}
+
 	printf("eth Dst = ");
 
 	for(i = 0x0; i < MAC_NUM; i++)
 	{
 		printf("%02x",packet[i]);
+
 		if(i != 0x5)
 		{
 			printf(":");
@@ -80,21 +105,7 @@ void ether_mac(const u_char *packet)
 		}
 	}
 
-	/* Print its eth Src info*/
-	printf("eth Src = ");
-
-	for(i = MAC_NUM; i < (MAC_NUM*2); i++)
-	{
-		printf("%02x",packet[i]);
-		if(i != ((MAC_NUM*2)-1))
-		{
-			printf(":");
-		}
-		else
-		{
-			printf("\n");
-		}
-	}
+	
 
 }
 
@@ -107,6 +118,7 @@ void ip_ip(const u_char *packet)
 	for(i = IP_NUM; i < IP_NUM+4; i++)
 	{
 		printf("%d",packet[i]);
+
 		if(i != (IP_NUM+3))
 		{
 			printf(".");
@@ -117,12 +129,12 @@ void ip_ip(const u_char *packet)
 		}
 	}
 
-	/* Print its eth Src info*/
 	printf("ip Dst = ");
 
 	for(i = IP_NUM+4; i < IP_NUM+8; i++)
 	{
 		printf("%d",packet[i]);
+
 		if(i != (IP_NUM+7))
 		{
 			printf(".");
@@ -133,4 +145,27 @@ void ip_ip(const u_char *packet)
 		}
 	}
 
+}
+
+void tcp_port(const u_char *packet)
+{
+	printf("Src Port = %d \n", (packet[TCP_NUM]*0x100) + packet[TCP_NUM+1]);
+	printf("Dst Port = %d \n", (packet[TCP_NUM+2]*0x100) + packet[TCP_NUM+3]);
+}
+
+void data_output(const u_char *packet)
+{
+	int i = 0;
+	printf("\n====================DATA==================== \n");
+	for(i = 0; i < DATA_BYTES; i++)
+	{
+		if(i % 16 == 0)
+		{
+			printf("\n");
+		}
+		else
+		{
+			printf("%02x ",packet[i]);
+		}
+	}
 }
