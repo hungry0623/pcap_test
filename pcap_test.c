@@ -4,7 +4,8 @@
 #define MAC_NUM 0x6
 #define IP_NUM 0x1a
 #define TCP_NUM 0x22
-#define DATA_BYTES 100
+#define DATA_NUM 0x36
+#define DATA_BYTES 0x64
 
 void ether_mac(const u_char *packet);
 void ip_ip(const u_char *packet);
@@ -157,11 +158,13 @@ void tcp_port(const u_char *packet)
 
 void data_output(const u_char *packet)
 {
-	int i = 0;
+	int i = DATA_NUM;
+	int check = 0;
 	printf("\n====================DATA==================== \n");
-	for(i = 0; i < DATA_BYTES; i++)
+	for(i = DATA_NUM; i < DATA_NUM+DATA_BYTES; i++)
 	{
-		if(i % 16 == 0)
+		check++;
+		if(check % 16 == 0)
 		{
 			printf("\n");
 		}
