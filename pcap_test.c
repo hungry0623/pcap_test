@@ -1,14 +1,10 @@
 #include <pcap.h>
 #include <stdio.h>
-struct ether_header
-{
-	unsigned char ether_smac[6];
-	unsigned char ether_dmac[6];
-};
+
+#define MAC_NUM 0x6
 
 int main(int argc, char *argv[])
 {
-	struct ether_header eth;
 	pcap_t *handle;			/* Session handle */
 	char *dev;			/* The device to sniff on */
 	char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
@@ -20,7 +16,7 @@ int main(int argc, char *argv[])
 	const u_char *packet;		/* The actual packet */
 	int check;
 	int i = 0;
-
+	
 	/* Define the device */
 	dev = pcap_lookupdev(errbuf);
 	if (dev == NULL) {
@@ -54,9 +50,9 @@ int main(int argc, char *argv[])
 	/* Print its eth Dst info*/
 	printf("eth Dst = ");
 
-	for(i = 0x0; i < 0x6; i++)
+	for(i = 0x0; i < MAC_NUM; i++)
 	{
-		printf("%x",packet[i]);
+		printf("%02x",packet[i]);
 		if(i != 0x5)
 		{
 			printf(":");
@@ -70,9 +66,9 @@ int main(int argc, char *argv[])
 	/* Print its eth Src info*/
 	printf("eth Src = ");
 
-	for(i = 0x6; i < 0xC; i++)
+	for(i = MAC_NUM; i < (MAC_NUM*2); i++)
 	{
-		printf("%x",packet[i]);
+		printf("%02x",packet[i]);
 		if(i != 0xB)
 		{
 			printf(":");
