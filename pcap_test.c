@@ -2,8 +2,10 @@
 #include <stdio.h>
 
 #define MAC_NUM 0x6
+#define IP_NUM 0x1a
 
 void ether_mac(const u_char *packet);
+void ip_ip(const u_char *packet);
 
 int main(int argc, char *argv[])
 {
@@ -46,11 +48,12 @@ int main(int argc, char *argv[])
 		return(2);
 	}
 	/* Grab a packet */
-
 	check = pcap_next_ex(handle, &header, &packet);
 	
 	/* Print its eth_MAC info*/
 	ether_mac(packet);
+	/* Print its eth_MAC info*/
+	ip_ip(packet);
 
 	/* And close the session */
 			
@@ -83,9 +86,46 @@ void ether_mac(const u_char *packet)
 	for(i = MAC_NUM; i < (MAC_NUM*2); i++)
 	{
 		printf("%02x",packet[i]);
-		if(i != 0xB)
+		if(i != ((MAC_NUM*2)-1))
 		{
 			printf(":");
+		}
+		else
+		{
+			printf("\n");
+		}
+	}
+
+}
+
+void ip_ip(const u_char *packet)
+{
+	int i = 0;
+	
+	printf("ip Src = ");
+
+	for(i = IP_NUM; i < IP_NUM+4; i++)
+	{
+		printf("%d",packet[i]);
+		if(i != (IP_NUM+3))
+		{
+			printf(".");
+		}
+		else
+		{
+			printf("\n");
+		}
+	}
+
+	/* Print its eth Src info*/
+	printf("ip Dst = ");
+
+	for(i = IP_NUM+4; i < IP_NUM+8; i++)
+	{
+		printf("%d",packet[i]);
+		if(i != (IP_NUM+7))
+		{
+			printf(".");
 		}
 		else
 		{
