@@ -3,6 +3,8 @@
 
 #define MAC_NUM 0x6
 
+void ether_mac(const u_char *packet);
+
 int main(int argc, char *argv[])
 {
 	pcap_t *handle;			/* Session handle */
@@ -15,7 +17,6 @@ int main(int argc, char *argv[])
 	struct pcap_pkthdr *header;	/* The header that pcap gives us */
 	const u_char *packet;		/* The actual packet */
 	int check;
-	int i = 0;
 	
 	/* Define the device */
 	dev = pcap_lookupdev(errbuf);
@@ -47,7 +48,20 @@ int main(int argc, char *argv[])
 	/* Grab a packet */
 
 	check = pcap_next_ex(handle, &header, &packet);
-	/* Print its eth Dst info*/
+	
+	/* Print its eth_MAC info*/
+	ether_mac(packet);
+
+	/* And close the session */
+			
+	pcap_close(handle);			
+	return(0);
+}
+
+void ether_mac(const u_char *packet)
+{
+	int i = 0;
+	
 	printf("eth Dst = ");
 
 	for(i = 0x0; i < MAC_NUM; i++)
@@ -79,8 +93,4 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* And close the session */
-			
-	pcap_close(handle);			
-	return(0);
 }
