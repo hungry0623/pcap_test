@@ -1,4 +1,4 @@
-pcap_test: pcap_test.c
-	gcc -o pcap_test pcap_test.c -lpcap
+pcap_test: main.c
+	gcc -o pcap_test main.c -lpcap
 clean:
 	rm -rf pcap_test
