@@ -33,7 +33,7 @@ struct sniff_ip {
     u_short ip_sum;		/* checksum */
     struct in_addr ip_src,ip_dst; /* source and dest address */
 };
-#define IP_HL(ip)		(((ip)->ip_vhl) & 0x0f)
+#define IP_HL(ip)       (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)		(((ip)->ip_vhl) >> 4)
 
 /* TCP header */
@@ -61,16 +61,11 @@ struct sniff_tcp {
     u_short th_urp;		/* urgent pointer */
 };
 
-#define MAC_NUM 0x6
-#define IP_NUM 0x1a
-#define TCP_NUM 0x22
-#define DATA_NUM 0x36
-#define DATA_BYTES 0x64
-
 const u_char* ether_header_info(const u_char *packet);
-void ip_header_info(const u_char *packet);
-void tcp_port(const u_char *packet);
-void data_output(const u_char *packet);
+const u_char* ip_header_info(const u_char *packet);
+const u_char*  tcp_port(const u_char *packet);
+u_short data_size(const struct sniff_ip *ip, const struct sniff_tcp *tcp);
+void data_output(u_short size, const u_char *packet);
 
 int main(int argc, char *argv[])
 {
@@ -86,14 +81,12 @@ int main(int argc, char *argv[])
     const u_char *ETHER_HEADER_P;
     const u_char *IP_HEADER_P;
     const u_char *TCP_HEADER_P;
+    const u_char *DATA_P;
+    u_short DATA_SIZE;
     int check;
 
     /* Define the device */
-    dev = pcap_lookupdev(errbuf);
-    if (dev == NULL) {
-        fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
-        return(2);
-    }
+    dev = argv[1];
     /* Find the properties for the device */
     if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
         fprintf(stderr, "Couldn't get netmask for device %s: %s\n", dev, errbuf);
@@ -120,17 +113,23 @@ int main(int argc, char *argv[])
         /* Grab a packet */
         check = pcap_next_ex(handle, &header, &packet);
         ETHER_HEADER_P = packet;
+
         printf("\n================Packet info================= \n\n");
-        /* Print its ETHER_MAC info*/
+
+        /* ETH */
         IP_HEADER_P = ether_header_info(ETHER_HEADER_P);
-        /* Print its IP_IP info*/
+
+        /* IP */
         TCP_HEADER_P = ip_header_info(IP_HEADER_P);
-        //ip_header_info(IP_HEADER_P);
-        /* Print its TCP_PORT info*/
-        //tcp_port(packet);
-        /* Print its DATA_OUTPUT info*/
-        //data_output(packet);
+
+        /* TCP */
+        DATA_P = tcp_port(TCP_HEADER_P);
+
+        /* DATA */
+        DATA_SIZE = data_size(IP_HEADER_P, TCP_HEADER_P);
+        data_output(DATA_SIZE, DATA_P);
         printf("\n");
+
         /* And close the session */
     }
     pcap_close(handle);
@@ -153,7 +152,6 @@ const u_char* ether_header_info(const u_char *p)
                 printf(":");
             }
         }
-
         printf("\n");
 
         printf("Mac Dst = ");
@@ -165,6 +163,7 @@ const u_char* ether_header_info(const u_char *p)
                 printf(":");
             }
         }
+        printf("\n");
 
         p += ETHER_HEADER_LEN;
 
@@ -172,49 +171,60 @@ const u_char* ether_header_info(const u_char *p)
     }
 }
 
-const u_char ip_header_info(const u_char *p)
+const u_char* ip_header_info(const u_char *p)
 {
     const struct sniff_ip *ip;
 
     ip = (struct sniff_ip*)(p);
-    char src[4] = {0};
+    char src[16] = {0};
+    char dst[16] = {0};
 
     printf("Ip Src = ");
+    inet_ntop(AF_INET,&(ip->ip_src),src,16);
+    printf("%s", src);
+    printf("\n");
 
-    inet_ntop(AF_INET,ip->ip_src,src,4);
-    printf("%d",src[0]);
-/*
-            for(int i = 0; i < IP_ADDR_LEN; i++)
-            {
-                printf("%d", (ip->ip_src));
-                if(i != 5)
-                {
-                    printf(":");
-                }
-            }
 
-            printf("\n");
+    printf("Ip Dst = ");
+    inet_ntop(AF_INET,&(ip->ip_dst),dst,16);
+    printf("%s", dst);
+    printf("\n");
 
-            printf("Mac Dst = ");
-            for(int i = 0; i < ETHER_ADDR_LEN; i++)
-            {
-                printf("%02x", eth->ether_dhost[i]);
-                if(i != 5)
-                {
-                    printf(":");
-                }
-            }*/
-            p += ETHER_HEADER_LEN;
+    p += IP_HL(ip)*4;
 
     return p;
 }
 
-void tcp_port(const u_char *packet)
+const u_char* tcp_port(const u_char *p)
 {
+    const struct sniff_tcp *tcp;
 
+    tcp = (struct sniff_tcp*)(p);
+
+    printf("tcp sport = %d\n",ntohs(tcp->th_sport));
+    printf("tcp dport = %d\n",ntohs(tcp->th_dport));
+
+    p += TH_OFF(tcp)*4;
+
+    return p;
 }
 
-void data_output(const u_char *packet)
+u_short data_size(const struct sniff_ip *ip, const struct sniff_tcp *tcp)
 {
+    u_short size = 0;
+
+    size = ntohs(ip->ip_len) - (IP_HL(ip)*4) - (TH_OFF(tcp)*4);
+
+    return size;
+}
+
+void data_output(u_short size, const u_char *p)
+{
+    printf("====================data====================\n\n");
+
+    for(u_short i = 0; i < size;i++)
+    {
+        printf("%c",p[i]);
+    }
 
 }
